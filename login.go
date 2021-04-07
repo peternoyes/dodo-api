@@ -31,6 +31,8 @@ var (
 		Endpoint:     github.Endpoint,
 	}
 	playground_secret = os.Getenv("PLAYGROUND_SECRET")
+	client_domain     = os.Getenv("CLIENT_DOMAIN")
+	client_url        = os.Getenv("CLIENT_URL")
 )
 
 type User struct {
@@ -133,9 +135,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	cookie := http.Cookie{Name: "Authorization", Value: "", HttpOnly: true}
+	cookie := http.Cookie{Name: "Authorization", Domain: client_domain, Value: "", HttpOnly: false, Secure: true}
 	http.SetCookie(w, &cookie)
-	http.Redirect(w, r, "http://localhost:8080", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, client_url, http.StatusTemporaryRedirect)
 }
 
 func UserInfo(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +155,7 @@ func UserInfo(w http.ResponseWriter, r *http.Request) {
 
 func Callback(w http.ResponseWriter, r *http.Request) {
 	// No matter what happens, redirect back to home page. If login succesful it will load the full application, otherwise just the playground
-	defer http.Redirect(w, r, "http://localhost:8080", http.StatusTemporaryRedirect)
+	defer http.Redirect(w, r, client_url, http.StatusTemporaryRedirect)
 
 	unescaped, err := url.QueryUnescape(r.FormValue("state"))
 	if err != nil {
@@ -231,7 +233,7 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Put in cookie
-	cookie := http.Cookie{Name: "Authorization", Value: tokenString, Expires: expiration, HttpOnly: false}
+	cookie := http.Cookie{Name: "Authorization", Domain: client_domain, Value: tokenString, Expires: expiration, HttpOnly: false, Secure: true}
 	http.SetCookie(w, &cookie)
 }
 
